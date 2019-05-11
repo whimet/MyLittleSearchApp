@@ -4,5 +4,9 @@
   },
   "scripts": {
     "test": "jest"
+  },
+  "dependencies": {
+    "lokijs": "^1.5.6",
+    "moment": "^2.24.0"
   }
 }
