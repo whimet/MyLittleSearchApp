@@ -6,4 +6,4 @@ const users = db.addCollection('users');
 
 users.insert(usersData);
 
-console.log(users.find({tags: {'$contains': 'Shrewsbury'}}));
+console.log(db.getCollection('users').find({tags: {'$contains': 'Shrewsbury'}}));
