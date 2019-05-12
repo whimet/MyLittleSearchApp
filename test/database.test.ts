@@ -1,6 +1,6 @@
 import Database from "../src/database";
 
-describe('#database', () => {
+describe('Database', () => {
     const userCollectionKey = 'User';
     const firstUser = {
         _id: 1,
@@ -18,7 +18,7 @@ describe('#database', () => {
     });
 
     test('should expose search terms', () => {
-        expect(db.searchTerms).toEqual([{name: 'User', terms: ['_id', 'name', 'created_at', 'tags']}, {
+        expect(db.searchableEntities).toEqual([{name: 'User', terms: ['_id', 'name', 'created_at', 'tags']}, {
             name: 'Ticket',
             terms: ['_id', 'assignee_id']
         }]);

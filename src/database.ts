@@ -5,7 +5,7 @@ interface Collection {
     records: any[]
 }
 
-interface SearchTerm {
+interface SearchableEntity {
     name: string,
     terms: string[]
 }
@@ -39,7 +39,7 @@ export default class Database {
         });
     }
 
-    public get searchTerms(): SearchTerm[] {
+    public get searchableEntities(): SearchableEntity[] {
         return this.collectionsMetadata.map(c => ({name: c.name, terms: c.properties.map(p => p.name)}));
     }
 
@@ -71,7 +71,7 @@ export default class Database {
         return typeof value;
     }
 
-    search(collectionName: string, property: string, value: any): any {
+    search(collectionName: string, property: string, value: any): any[] {
         const collection = this.db.getCollection(collectionName);
         const isArray = this.isArray(collectionName, property);
         const queryValue = isArray ? {'$contains': value} : value;
