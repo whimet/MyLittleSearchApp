@@ -15,6 +15,7 @@ How to run application:
 
 Todo:
 x Remove 'metadata' and '$loki'
+x Search number by string
 - Case insensitive search
 - Date support
 - Dockerfile

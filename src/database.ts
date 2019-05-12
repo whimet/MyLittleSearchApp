@@ -78,7 +78,7 @@ export default class Database {
     search(collectionName: string, property: string, value: any): any[] {
         const collection = this.db.getCollection(collectionName);
         const isArray = this.isArray(collectionName, property);
-        const queryValue = isArray ? {'$contains': value} : value;
+        const queryValue = isArray ? {'$contains': value} : {'$aeq': value};
         const query = {[property]: queryValue};
         return collection.find(query).map(o => this.withoutLokiMetadata(collectionName, o));
     }
