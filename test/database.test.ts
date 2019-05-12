@@ -28,9 +28,11 @@ describe('Database', () => {
         it('with number', () => {
             expect(db.search(userEntity, '_id', 1)).toEqual([firstUser]);
         });
+
         it('with string', () => {
-            expect(db.search(userEntity, '_name', 'Francisca Rasmussen')).toEqual([firstUser]);
+            expect(db.search(userEntity, 'name', 'Francisca Rasmussen')).toEqual([firstUser]);
         });
+
         it('with array', () => {
             expect(db.search(userEntity, 'tags', 'Foxworth')).toEqual([secondUser]);
         });
