@@ -20,6 +20,10 @@ interface PropertyMetadata {
     type: string
 }
 
+function clone(obj: any): any {
+    return Object.assign({}, obj);
+}
+
 export default class Database {
     private collections: Collection[];
     private db: LokiConstructor;
@@ -35,7 +39,7 @@ export default class Database {
         }));
         this.collections.forEach(c => {
             const collection = this.db.addCollection(c.name);
-            c.records.forEach(r => collection.insert(r));
+            c.records.forEach(r => collection.insert(clone(r)));
         });
     }
 
@@ -75,7 +79,22 @@ export default class Database {
         const collection = this.db.getCollection(collectionName);
         const isArray = this.isArray(collectionName, property);
         const queryValue = isArray ? {'$contains': value} : value;
-        return collection.find({[property]: queryValue});
+        const query = {[property]: queryValue};
+        return collection.find(query).map(o => this.withoutLokiMetadata(collectionName, o));
+    }
+
+    private withoutLokiMetadata(collectionName: string, obj: any): any {
+        const result = clone(obj);
+        const metadata = this.collectionsMetadata.find(c => c.name === collectionName);
+        if (metadata != null) {
+            const propertyNames = metadata.properties.map(p => p.name);
+            Object.keys(result).forEach(k => {
+                if (!propertyNames.includes(k)) {
+                    delete result[k];
+                }
+            });
+        }
+        return result;
     }
 
     private isArray(collection: string, property: string) {
