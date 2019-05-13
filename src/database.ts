@@ -1,109 +1,55 @@
 import Loki from 'lokijs';
-
-interface Collection {
-    name: string,
-    records: any[]
-}
-
-interface SearchableEntity {
-    name: string,
-    terms: string[]
-}
-
-interface CollectionMetadata {
-    name: string,
-    properties: PropertyMetadata[]
-}
-
-interface PropertyMetadata {
-    name: string,
-    type: string
-}
-
-function clone(obj: any): any {
-    return Object.assign({}, obj);
-}
+import {EntityCollection, EntityMetadata, SearchableEntity} from './model'
+import {clone, cloneWithProperties} from "./util";
+import EntityMetadataBuilder from "./entity_metadata_builder";
 
 export default class Database {
-    private collections: Collection[];
     private db: LokiConstructor;
-    private collectionsMetadata: CollectionMetadata[];
+    private entityMetadata: EntityMetadata[];
 
-    constructor(collections: Collection[]) {
-        this.collections = collections;
+    constructor(collections: EntityCollection[]) {
         this.db = new Loki('example.db');
-
-        this.collectionsMetadata = this.collections.map(c => ({
-            name: c.name,
-            properties: this.getProperties(c.records)
-        }));
-        this.collections.forEach(c => {
-            const collection = this.db.addCollection(c.name);
-            c.records.forEach(r => collection.insert(clone(r)));
-        });
+        this.entityMetadata = new EntityMetadataBuilder(collections).build();
+        this.addToDb(collections);
     }
 
     public get searchableEntities(): SearchableEntity[] {
-        return this.collectionsMetadata.map(c => ({name: c.name, terms: c.properties.map(p => p.name)}));
+        return this.entityMetadata.map(c => ({name: c.name, terms: c.terms.map(p => p.name)}));
     }
 
-    private getProperties(records: any[]): PropertyMetadata[] {
-        return records.reduce((properties, record) =>
-                Object.keys(record)
-                    .reduce((recordProperties, propertyName) =>
-                        this.addProperty(recordProperties, propertyName, record[propertyName]), properties),
-            []);
+    public search(entityName: string, term: string, value: any): any[] {
+        const isArray = this.isArray(entityName, term);
+        const subQuery = isArray ? {'$contains': value} : {'$aeq': value};
+        const query = {[term]: subQuery};
+
+        const collection = this.db.getCollection(entityName);
+        return collection.find(query).map(o => this.copyWithEntityTerms(entityName, o));
     }
 
-    private addProperty(properties: PropertyMetadata[], name: string, value: any): PropertyMetadata[] {
-        const result = properties.find(p => p.name === name);
-        if (result == null) {
-            return properties.concat([{name: name, type: this.getType(value)}]);
-        }
-
-        const type = this.getType(value);
-        if (result.type !== type) {
-            throw new Error(`Property ${name} has value type '${result.type}', but got a different type '${type}'`)
-        }
-        return properties;
+    private addToDb(collections: EntityCollection[]) {
+        collections.forEach(c => {
+            const collection = this.db.addCollection(c.name);
+            collection.insert(c.records.map(r => clone(r)));
+        });
     }
 
-    private getType(value: any): string {
-        if (typeof value === 'object' && value.constructor === Array) {
-            return 'Array';
-        }
-        return typeof value;
+    private copyWithEntityTerms(entityName: string, obj: any): any {
+        const entityTerms = this.getEntityTerms(entityName);
+        return entityTerms != null ? cloneWithProperties(obj, entityTerms) : obj;
     }
 
-    search(collectionName: string, property: string, value: any): any[] {
-        const collection = this.db.getCollection(collectionName);
-        const isArray = this.isArray(collectionName, property);
-        const queryValue = isArray ? {'$contains': value} : {'$aeq': value};
-        const query = {[property]: queryValue};
-        return collection.find(query).map(o => this.withoutLokiMetadata(collectionName, o));
+    private getEntityTerms(entityName: string): string[] | undefined {
+        const metadata = this.entityMetadata.find(c => c.name === entityName);
+        return metadata && metadata.terms.map(t => t.name);
     }
 
-    private withoutLokiMetadata(collectionName: string, obj: any): any {
-        const result = clone(obj);
-        const metadata = this.collectionsMetadata.find(c => c.name === collectionName);
-        if (metadata != null) {
-            const propertyNames = metadata.properties.map(p => p.name);
-            Object.keys(result).forEach(k => {
-                if (!propertyNames.includes(k)) {
-                    delete result[k];
-                }
-            });
-        }
-        return result;
+    private isArray(entityName: string, term: string) {
+        return this.getTermType(entityName, term) === 'Array';
     }
 
-    private isArray(collection: string, property: string) {
-        return this.getPropertyType(collection, property) === 'Array';
-    }
-
-    private getPropertyType(collection: string, key: string) {
-        const collectionMetadata = this.collectionsMetadata.find(c => c.name === collection);
-        const propertyMetadata = collectionMetadata && collectionMetadata.properties.find(p => p.name === key);
-        return propertyMetadata && propertyMetadata.type;
+    private getTermType(entityName: string, term: string) {
+        const entityMetadata = this.entityMetadata.find(c => c.name === entityName);
+        const termMetadata = entityMetadata && entityMetadata.terms.find(t => t.name === term);
+        return termMetadata && termMetadata.type;
     }
 }

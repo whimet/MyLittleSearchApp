@@ -1,80 +1,65 @@
-import Database from "./database";
-import * as fs from "fs";
 import * as inquirer from "inquirer";
+import ZendeskSearch from "./zendesk_search";
+import {readJson, isAnswerValid, validateInput, quit} from "./util";
 
-function readJson(file: string): any {
-    const content = fs.readFileSync(file);
-    return JSON.parse(content.toString());
-}
-
-const entities = [
+const zendeskSearch = new ZendeskSearch([
     {name: 'Users', records: readJson('./data/users.json')},
     {name: 'Tickets', records: readJson('./data/tickets.json')},
     {name: 'Organizations', records: readJson('./data/organizations.json')}
-];
-const database = new Database(entities);
+]);
+
+const searchZendeskIndex = '1';
+const viewSearchableFields = '2';
 
 const initialQuestion = `
 Welcome to Zendesk Search
 Type 'quit' to exit at any time, Press 'Enter' to continue
 
     Select search options:
-    * Press 1 to search Zendesk
-    * Press 2 to search a list of searchable fields
-    * Type 'quit' to exit
+    * Press ${searchZendeskIndex} to search Zendesk
+    * Press ${viewSearchableFields} to view a list of searchable fields
+    * Type '${quit}' to exit
 `;
 
-function getEntityName(searchEntityIndex: string) {
-    return entities[Number(searchEntityIndex) - 1].name;
-}
-
-function getTerms(searchEntityIndex: string): string[] {
-    const searchableEntity = database.searchableEntities.find(c => c.name === getEntityName(searchEntityIndex));
-    return searchableEntity && searchableEntity.terms || [];
-}
+const searchOptions = 'searchOptions';
+const searchEntityIndex = 'searchEntityIndex';
+const searchTerm = 'searchTerm';
+const searchValue = 'searchValue';
+const input = 'input';
 
 const questions = [
     {
-        type: 'input',
-        name: 'searchOptions',
+        type: input,
+        name: searchOptions,
         message: initialQuestion,
-        validate: (input: string) => ['1', '2', 'quit'].includes(input) || 'Invalid answer'
+        validate: (input: string) => validateInput(input, [searchZendeskIndex, viewSearchableFields])
     },
     {
-        type: 'input',
-        name: 'searchEntityIndex',
-        message: `Select ${entities.map((entity, index) => `${index + 1})${entity.name}`).join(' or ')}`,
-        validate: (input: string) => entities.map((entity, index) => `${index + 1}`).concat(['quit']).includes(input) || 'Invalid answer',
-        when: (answers: any) => answers['searchOptions'] === '1'
+        type: input,
+        name: searchEntityIndex,
+        message: zendeskSearch.getEntityIndexPrompt(),
+        validate: (input: string) => validateInput(input, zendeskSearch.getEntityIndexes()),
+        when: (answers: any) => answers[searchOptions] === searchZendeskIndex
     },
     {
-        type: 'input',
-        name: 'searchTerm',
+        type: input,
+        name: searchTerm,
         message: 'Enter search term',
-        validate: (input: string, answers: any) => getTerms(answers['searchEntityIndex']).concat(['quit']).includes(input) || 'Invalid answer',
-        when: (answers: any) => answers['searchEntityIndex'] != null && answers['searchEntityIndex'] !== 'quit'
+        validate: (input: string, answers: any) => validateInput(input, zendeskSearch.getSearchTerms(answers[searchEntityIndex])),
+        when: (answers: any) => isAnswerValid(answers, searchEntityIndex)
     },
     {
-        type: 'input',
-        name: 'searchValue',
+        type: input,
+        name: searchValue,
         message: 'Enter search value',
-        when: (answers: any) => answers['searchTerm'] != null && answers['searchTerm'] !== 'quit'
+        when: (answers: any) => isAnswerValid(answers, searchTerm)
     },
 ];
 
-function getSearchableFields() {
-    return database.searchableEntities.map(c => `-----------------------------\nSearch ${c.name} with\n${c.terms.join('\n')}`).join('\n');
-}
-
 inquirer.prompt(questions).then((answers: any) => {
-    if (answers['searchOptions'] === '2') {
-        console.log(getSearchableFields());
-    } else if (answers['searchValue'] != null) {
-        const results = database.search(getEntityName(answers['searchEntityIndex']), answers['searchTerm'], answers['searchValue']);
-        if (results.length === 0) {
-            console.log(`Searching ${getEntityName(answers['searchEntityIndex']).toLowerCase()} for ${answers['searchTerm']} with a value of ${answers['searchValue']}\nNo results found`);
-        } else {
-            results.forEach(r => console.log(r));
-        }
+    if (answers[searchOptions] === viewSearchableFields) {
+        console.log(zendeskSearch.getSearchableFields());
+    } else if (isAnswerValid(answers, searchValue)) {
+        console.log(zendeskSearch.search(answers[searchEntityIndex], answers[searchTerm], answers[searchValue]));
     }
 });
