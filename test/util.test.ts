@@ -29,7 +29,7 @@ describe('Util', () => {
             valid: false
         },
     ].forEach(({answers, question, valid}) =>
-        it(`${question} should be ${valid} with ${answers}`, () => {
+        it(`${question} should be ${valid} with ${JSON.stringify(answers)}`, () => {
             expect(isAnswerValid(answers, question)).toBe(valid);
         }));
 
@@ -55,7 +55,7 @@ describe('Util', () => {
             result: 'Invalid answer'
         },
     ].forEach(({validAnswers, input, result}) =>
-        it(`${input} should be ${result} with ${validAnswers}`, () => {
+        it(`${input} should be ${result} with ${JSON.stringify(validAnswers)}`, () => {
             expect(validateInput(input, validAnswers)).toEqual(result);
         }));
 
@@ -73,7 +73,7 @@ describe('Util', () => {
             result: undefined
         },
     ].forEach(({obj, result}) =>
-        it(`clone of ${obj} should be ${result}`, () => {
+        it(`clone of ${JSON.stringify(obj)} should be ${result}`, () => {
             expect(clone(obj)).toEqual(result);
         }));
 
@@ -99,7 +99,7 @@ describe('Util', () => {
             result: undefined
         },
     ].forEach(({obj, properties, result}) =>
-        it(`clone of ${obj} with properties ${properties} should be ${result}`, () => {
+        it(`clone of ${JSON.stringify(obj)} with properties ${JSON.stringify(properties)} should be ${JSON.stringify(result)}`, () => {
             expect(cloneWithProperties(obj, properties)).toEqual(result);
         }));
 
