@@ -28,7 +28,7 @@ export default class ZendeskSearch {
         return searchableEntity && searchableEntity.terms || [];
     }
 
-    public getSearchableFields() {
+    public getSearchableFields(): string {
         return this.database.searchableEntities
             .map(c => `-----------------------------\nSearch ${c.name} with\n${c.terms.join('\n')}`)
             .join('\n');
