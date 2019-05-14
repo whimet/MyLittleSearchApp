@@ -35,15 +35,15 @@ describe('ZendeskSearch', () => {
             entityName: undefined
         }
     ].forEach(({index, entityName}) =>
-        test(`entity name at index ${index} should be ${entityName}`, () => {
+        it(`entity name at index ${index} should be ${entityName}`, () => {
             expect(zendeskSearch.getEntityName(index)).toEqual(entityName);
         }));
 
-    test('should get entity index prompt', () => {
+    it('should get entity index prompt', () => {
         expect(zendeskSearch.getEntityIndexPrompt()).toEqual('Select 1)Users or 2)Tickets');
     });
 
-    test('should get entity indexes', () => {
+    it('should get entity indexes', () => {
         expect(zendeskSearch.getEntityIndexes()).toEqual(['1', '2']);
     });
 
@@ -61,11 +61,11 @@ describe('ZendeskSearch', () => {
             terms: []
         },
     ].forEach(({index, terms}) =>
-        test(`search terms at index ${index} should be ${terms}`, () => {
+        it(`search terms at index ${index} should be ${terms}`, () => {
             expect(zendeskSearch.getSearchTerms(index)).toEqual(terms);
         }));
 
-    test('should get searchable fields', () => {
+    it('should get searchable fields', () => {
         expect(zendeskSearch.getSearchableFields())
             .toEqual(`-----------------------------\nSearch ${userEntity} with\n_id\nname\ntags\n-----------------------------\nSearch ${ticketsEntity} with\n_id`);
     });
@@ -84,7 +84,7 @@ describe('ZendeskSearch', () => {
             results: `Searching ${userEntity.toLowerCase()} for _id with a value of 0\nNo results found`
         },
     ].forEach(({index, term, value, results}) =>
-        test(`search term ${term} with value ${value} at index ${index} should be ${results}`, () => {
+        it(`search term ${term} with value ${value} at index ${index} should be ${results}`, () => {
             expect(zendeskSearch.search(index, term, value)).toEqual(results);
         }));
 

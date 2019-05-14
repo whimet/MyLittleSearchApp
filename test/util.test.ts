@@ -2,11 +2,11 @@ import {clone, cloneWithProperties, getType, isAnswerValid, readJson, validateIn
 
 describe('Util', () => {
     describe('readJson', () => {
-        test('should read successfully', () => {
+        it('should read successfully', () => {
             expect(readJson('./data/users.json').length).toEqual(75);
         });
 
-        test('should throw error if fails', () => {
+        it('should throw error if fails', () => {
             const file = './invalid_file';
             expect(() => readJson(file)).toThrow(`Failed to read ${file} as JSON`);
         });
@@ -29,7 +29,7 @@ describe('Util', () => {
             valid: false
         },
     ].forEach(({answers, question, valid}) =>
-        test(`${question} should be ${valid} with ${answers}`, () => {
+        it(`${question} should be ${valid} with ${answers}`, () => {
             expect(isAnswerValid(answers, question)).toBe(valid);
         }));
 
@@ -55,7 +55,7 @@ describe('Util', () => {
             result: 'Invalid answer'
         },
     ].forEach(({validAnswers, input, result}) =>
-        test(`${input} should be ${result} with ${validAnswers}`, () => {
+        it(`${input} should be ${result} with ${validAnswers}`, () => {
             expect(validateInput(input, validAnswers)).toEqual(result);
         }));
 
@@ -73,7 +73,7 @@ describe('Util', () => {
             result: undefined
         },
     ].forEach(({obj, result}) =>
-        test(`clone of ${obj} should be ${result}`, () => {
+        it(`clone of ${obj} should be ${result}`, () => {
             expect(clone(obj)).toEqual(result);
         }));
 
@@ -99,7 +99,7 @@ describe('Util', () => {
             result: undefined
         },
     ].forEach(({obj, properties, result}) =>
-        test(`clone of ${obj} with properties ${properties} should be ${result}`, () => {
+        it(`clone of ${obj} with properties ${properties} should be ${result}`, () => {
             expect(cloneWithProperties(obj, properties)).toEqual(result);
         }));
 
@@ -121,7 +121,7 @@ describe('Util', () => {
             result: 'object'
         },
     ].forEach(({obj, result}) =>
-        test(`type of ${obj} should be ${result}`, () => {
+        it(`type of ${obj} should be ${result}`, () => {
             expect(getType(obj)).toEqual(result);
         }));
 });

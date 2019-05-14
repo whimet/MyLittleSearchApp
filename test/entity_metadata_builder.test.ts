@@ -28,13 +28,13 @@ describe('EntityMetadataBuilder', () => {
         },
         {collections: [], metadata: []}
     ].forEach(({collections, metadata}) =>
-        test(`should build entity metadata for collections ${collections}`, () => {
+        it(`should build entity metadata for collections ${collections}`, () => {
             const entityMetadata = new EntityMetadataBuilder(collections).build();
             expect(entityMetadata).toEqual(metadata)
         }));
 
 
-    test('should fail if term type changes', () => {
+    it('should fail if term type changes', () => {
         expect(() => new EntityMetadataBuilder([{
             name: userEntity,
             records: [firstUser, invalidUser]
