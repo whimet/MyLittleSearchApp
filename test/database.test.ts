@@ -19,32 +19,58 @@ describe('Database', () => {
         }, {name: ticketsEntity, records: [firstTicket]}]);
     });
 
-    test('should expose search terms', () => {
-        expect(db.searchableEntities).toEqual([{name: userEntity, terms: ['_id', 'name', 'created_at', 'tags']}, {
-            name: ticketsEntity,
-            terms: ['_id', 'description']
-        }]);
-    });
-
-    describe('should search by term value', () => {
-        it('with number', () => {
-            expect(db.search(userEntity, '_id', 1)).toEqual([firstUser]);
+    describe('searchableEntities', () => {
+        it('should expose search terms', () => {
+            expect(db.searchableEntities).toEqual([{name: userEntity, terms: ['_id', 'name', 'created_at', 'tags']}, {
+                name: ticketsEntity,
+                terms: ['_id', 'description']
+            }]);
         });
 
-        it('with number string', () => {
-            expect(db.search(userEntity, '_id', '1')).toEqual([firstUser]);
-        });
-
-        it('with string', () => {
-            expect(db.search(userEntity, 'name', 'Francisca Rasmussen')).toEqual([firstUser]);
-        });
-
-        it('with empty string', () => {
-            expect(db.search(ticketsEntity, 'description', '')).toEqual([firstTicket]);
-        });
-
-        it('with array', () => {
-            expect(db.search(userEntity, 'tags', 'Foxworth')).toEqual([secondUser]);
+        it('should work with empty collection', () => {
+            expect(new Database([]).searchableEntities).toEqual([]);
         });
     });
+
+    [
+        {
+            entityName: userEntity,
+            term: '_id',
+            value: 1,
+            results: [firstUser]
+        },
+        {
+            entityName: userEntity,
+            term: '_id',
+            value: '1',
+            results: [firstUser]
+        },
+        {
+            entityName: userEntity,
+            term: 'name',
+            value: 'Francisca Rasmussen',
+            results: [firstUser]
+        },
+        {
+            entityName: userEntity,
+            term: 'tags',
+            value: 'Foxworth',
+            results: [secondUser]
+        },
+        {
+            entityName: ticketsEntity,
+            term: 'description',
+            value: '',
+            results: [firstTicket]
+        },
+        {
+            entityName: 'invalidEntity',
+            term: '_id',
+            value: 1,
+            results: []
+        },
+    ].forEach(({entityName, term, value, results}) =>
+        it(`should search ${entityName} by term ${term} and value ${value} and got ${results}`, () => {
+            expect(db.search(entityName, term, value)).toEqual(results);
+        }));
 });
